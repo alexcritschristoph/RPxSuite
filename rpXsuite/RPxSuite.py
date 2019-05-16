@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 import os
 import sys
 import glob
@@ -9,15 +12,15 @@ from collections import defaultdict
 
 def main(args):
 
-    hmm_file = "essential.hmm"
+    hmm_file = os.path.dirname(__file__) + '/helper_files/essential.hmm'
     hmm_name= args.gene
 
     args.output = args.output.rstrip("/") + "/"
     if not os.path.isdir(args.output):
         os.system("mkdir " + args.output)
     else:
-        os.system("rm -rf " + args.output)
-        os.system("mkdir " + args.output)
+        print("{0} already exists- either remove or choose another output name".format(args.output))
+        sys.exit()
 
     ## MAIN LOOP: CALL PRODIGAL, HMMSEARCH ON EACH FILE
     for assembly in args.input:
@@ -37,7 +40,7 @@ def main(args):
             cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', args.output + assembly  + ".hits", hmm_file, args.output + assembly + ".faa"]
 
         process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
-        
+
     ## PART 2
     ## Make FASTA file of hits
     print("Reading hits...")
@@ -63,7 +66,7 @@ def main(args):
                 f_out.write(">" + record.id + "\n")
                 f_out.write(str(record.seq) + "\n")
     f_out.close()
-    
+
     ## Cluster protein hits
     print("Running VSEARCH")
     cmd = ["vsearch", "--cluster_fast", args.output + "all.hits", "--id", str(args.id), "--centroids", args.output + "centroids.fasta", "--uc", args.output + "clusters.txt"]
@@ -76,7 +79,7 @@ def main(args):
     centroids = {}
     for record in SeqIO.parse(args.output + "centroids.fasta", "fasta"):
         centroids["_".join(record.id.split("_")[:-1])] = record.id
-    
+
     f = open(args.output + "clusters.txt")
     clusters = defaultdict(list)
     for line in f.readlines():
@@ -110,7 +113,7 @@ def main(args):
         print(cluster + "\t" + largest_name + "\t" + centroid + "\t" + str(len(clusters[cluster])))
         f_long.write(">" + cluster + "_" + largest_name + ":" + centroid + "." + str(len(clusters[cluster])) + "\n")
         f_long.write(str(seqs[largest_name]) + "\n")
-    
+
     f_long.close()
 
 if __name__ == '__main__':
