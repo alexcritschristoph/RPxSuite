@@ -25,11 +25,13 @@ Several files will be produced in the output directory which are described below
 
 * `longest.contigs.fasta` has the longest scaffold housing a gene from each gene cluster
 
+* `centroids.fasta` lists the centroid genes in .fasta format
+
+* `clustering.info.tsv` is a DataFrame listing how each gene and scaffold is clustered
+
 #### Intermediate files
 
 * `all.hits` is the parsed HMM hits [maybe garbage?]
-
-* `centroids.fasta` lists the centroid genes in .fasta format
 
 * `cluster.txt` is the clustering file produced by VSEARCH
 
