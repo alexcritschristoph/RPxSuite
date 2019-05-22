@@ -17,6 +17,24 @@ $ pip install .
 $ RPxSuite.py *.fasta -g Ribosomal_L6
 ```
 
+## Output files
+
+Several files will be produced in the output directory which are described below
+
+#### Finalized files
+
+* `longest.contigs.fasta` has the longest scaffold housing a gene from each gene cluster
+
+#### Intermediate files
+
+* `all.hits` is the parsed HMM hits [maybe garbage?]
+
+* `centroids.fasta` lists the centroid genes in .fasta format
+
+* `cluster.txt` is the clustering file produced by VSEARCH
+
+* Each input file will have a file ending in `.faa`, `.genes`, and `.hits`. These are all identified amino-acid sequences, nucleotide sequences, and raw HMM results (respectively)
+
 ## Dependencies
 
 * [VSEARCH](https://github.com/torognes/vsearch)

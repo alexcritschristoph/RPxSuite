@@ -2,10 +2,6 @@
 
 ### Immediately necessary
 
-* Print results to file instead of printing to screen
-
-* Show the cluster of all sequences, not just the winner
-
 * Default to using nucleotide, not amino acid
 
 * Use the thresholds described in the publication
@@ -23,3 +19,5 @@
 * Better handleing of choosing the gene you want. The ability to print a description table would be ideal
 
 * Change vsearch clustering parameters
+
+* Parallelize prodigal
