@@ -19,3 +19,5 @@
 * Change vsearch clustering parameters
 
 * Parallelize prodigal
+
+* Add argument for threads (controlling hmm, vsearch, and number of prodigal run in parralel)
