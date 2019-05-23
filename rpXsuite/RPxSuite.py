@@ -61,10 +61,10 @@ def main(args):
                         scaf = "_".join(hit.split("_")[:-1])
                         all_hits.append(hit)
     print(all_hits)
-    if args.nucleotide:
-        suffix = "*.genes"
-    else:
+    if args.amino_acid:
         suffix = "*.faa"
+    else:
+        suffix = "*.genes"
 
     for fn in glob.glob(args.output + suffix):
         for record in SeqIO.parse(fn, "fasta"):
@@ -157,9 +157,9 @@ if __name__ == '__main__':
         help='Output directory')
     parser.add_argument("-s", "--score_cutoff", action="store", default="cut_ga",  \
         help='An HMM score threshold to use - cut_ga, cut_nc, or cut_tc.')
-    parser.add_argument("--nucleotide", dest='nucleotide', action='store_true', \
-        help='Choose to cluster by nucleotide sequence instead of protein sequence.')
+    parser.add_argument("--amino_acid", dest='amino_acid', action='store_true', \
+        help='Choose to cluster by amino_acid sequence instead of nucleotide sequence.')
 
-    parser.set_defaults(nucleotide=False)
+    parser.set_defaults(amino_acid=False)
     args = parser.parse_args()
     main(args)

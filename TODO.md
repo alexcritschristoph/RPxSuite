@@ -2,8 +2,6 @@
 
 ### Immediately necessary
 
-* Default to using nucleotide, not amino acid
-
 * Use the thresholds described in the publication
 
 ### Future upgrades
