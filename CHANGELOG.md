@@ -5,8 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## Uncommitted
-### Changed
+## [0.1.1] - 2019-05-22
 - Default is not nucleotide, not amino acid
+- Added default thresholds
 
 ## [0.1.0] - 2019-05-22
 ### Added
