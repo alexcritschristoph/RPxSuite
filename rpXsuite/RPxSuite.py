@@ -1,8 +1,11 @@
-# This is the RPXsuite
+#!/usr/bin/env python
+
 import os
 import sys
 import glob
 import argparse
+import numpy as np
+import pandas as pd
 import subprocess
 from Bio import SeqIO
 from subprocess import DEVNULL
@@ -10,35 +13,39 @@ from collections import defaultdict
 
 def main(args):
 
-    hmm_file = "essential.hmm"
+    hmm_file = os.path.dirname(__file__) + '/helper_files/essential.hmm'
     hmm_name= args.gene
 
     args.output = args.output.rstrip("/") + "/"
-    if not os.path.isdir(args.output):
-        os.system("mkdir " + args.output)
-    else:
-        os.system("rm -rf " + args.output)
-        os.system("mkdir " + args.output)
+    # if not os.path.isdir(args.output):
+    #     os.system("mkdir " + args.output)
+    # else:
+    #     print("{0} already exists- either remove or choose another output name".format(args.output))
+    #     sys.exit()
+    #
+    # ## MAIN LOOP: CALL PRODIGAL, HMMSEARCH ON EACH FILE
+    # for assembly in args.input:
+    #
+    #     ## call prodigal on contigs
+    #     print("Running prodigal on " + assembly)
+    #
+    #     ## figure out basename of prodigal files
+    #     base = args.output + os.path.basename(assembly)
+    #
+    #     cmd = ["prodigal", '-i', assembly, '-p', "meta", '-d', base + ".genes", '-a', base + ".faa"]
+    #     print(' '.join(cmd))
+    #     process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
+    #     ## call HMMscan on marker genes
+    #     print("Running HMMSearch")
+    #     if args.score_cutoff == 'cut_tc':
+    #         cmd = ["hmmsearch", '--cpu', '6', "--cut_tc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+    #     elif args.score_cutoff == 'cut_nc':
+    #         cmd = ["hmmsearch", '--cpu', '6', "--cut_nc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+    #     elif args.score_cutoff == 'cut_ga':
+    #         cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+    #
+    #     process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
 
-    ## MAIN LOOP: CALL PRODIGAL, HMMSEARCH ON EACH FILE
-    for assembly in args.input:
-
-        ## call prodigal on contigs
-        print("Running prodigal on " + assembly)
-
-        cmd = ["prodigal", '-i', assembly, '-p', "meta", '-d', args.output + assembly + ".genes", '-a', args.output + assembly + ".faa"]
-        process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
-        ## call HMMscan on marker genes
-        print("Running HMMSearch")
-        if args.score_cutoff == 'cut_tc':
-            cmd = ["hmmsearch", '--cpu', '6', "--cut_tc", '--tblout', args.output + assembly  + ".hits", hmm_file, args.output + assembly + ".faa"]
-        elif args.score_cutoff == 'cut_nc':
-            cmd = ["hmmsearch", '--cpu', '6', "--cut_nc", '--tblout', args.output + assembly  + ".hits", hmm_file, args.output + assembly + ".faa"]
-        elif args.score_cutoff == 'cut_ga':
-            cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', args.output + assembly  + ".hits", hmm_file, args.output + assembly + ".faa"]
-
-        process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
-        
     ## PART 2
     ## Make FASTA file of hits
     print("Reading hits...")
@@ -53,10 +60,10 @@ def main(args):
                         scaf = "_".join(hit.split("_")[:-1])
                         all_hits.append(hit)
     print(all_hits)
-    if args.nucleotide:
-        suffix = "*.genes"
-    else:
+    if args.amino_acid:
         suffix = "*.faa"
+    else:
+        suffix = "*.genes"
 
     for fn in glob.glob(args.output + suffix):
         for record in SeqIO.parse(fn, "fasta"):
@@ -64,28 +71,18 @@ def main(args):
                 f_out.write(">" + record.id + "\n")
                 f_out.write(str(record.seq) + "\n")
     f_out.close()
-    
+
     ## Cluster protein hits
     print("Running VSEARCH")
-    cmd = ["vsearch", "--cluster_fast", args.output + "all.hits", "--id", str(args.id), "--centroids", args.output + "centroids.fasta", "--uc", args.output + "clusters.txt"]
+    cmd = ["vsearch", "--cluster_fast", args.output + "all.hits", "--id", str(args.id), "--centroids", args.output + "centroids.fasta", "--maxrejects", "0", "--threads", "6", "--uc", args.output + "clusters.txt"]
     process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
 
     ## Return cluster information
     print("Reading clustering results")
 
-    ## Get centroid information
-    centroids = {}
-    for record in SeqIO.parse(args.output + "centroids.fasta", "fasta"):
-        centroids["_".join(record.id.split("_")[:-1])] = record.id
-    
-    f = open(args.output + "clusters.txt")
-    clusters = defaultdict(list)
-    for line in f.readlines():
-        cluster = line.split()[1]
-        prot = line.split()[-2]
-        scaf = "_".join(prot.split("_")[:-1])
-        clusters[cluster].append(scaf)
-    f.close()
+    Rdb = parse_usearch_clustering(args.output + "clusters.txt")
+    Rdb['scaffold'] = ["_".join(prot.split("_")[:-1]) for prot in Rdb['sequence']]
+    Rdb['centroid_scaffold'] = ["_".join(prot.split("_")[:-1]) for prot in Rdb['centroid']]
 
     ## Get scaffold lengths
     s2l = {}
@@ -94,25 +91,52 @@ def main(args):
         for record in SeqIO.parse(fn, "fasta"):
             s2l[record.id] = len(record.seq)
             seqs[record.id] = record.seq
+    Rdb['length'] = Rdb['scaffold'].map(s2l)
 
     ## Get largest contig
     f_long = open(args.output + "longest.contigs.fasta", "w+")
-    print("Cluster Number\tLongest Scaffold\tCentroid Scaffold\tGenesInScaffold")
-    for cluster in clusters:
-        largest = 0
-        largest_name = 'NA'
-        centroid = 'NA'
-        for scaf in clusters[cluster]:
-            if s2l[scaf] > largest:
-                largest = s2l[scaf]
-                largest_name = scaf
-            if scaf in centroids:
-                centroid = centroids[scaf]
-        print(cluster + "\t" + largest_name + "\t" + centroid + "\t" + str(len(clusters[cluster])))
-        f_long.write(">" + cluster + "_" + largest_name + ":" + centroid + "." + str(len(clusters[cluster])) + "\n")
+    for cluster, db in Rdb.groupby('cluster'):
+        cluster = str(cluster)
+        leng = str(db.sort_values('length', ascending=False)['length'].tolist()[0])
+        largest_name = str(db.sort_values('length', ascending=False)['scaffold'].tolist()[0])
+        centroid = str(db.sort_values('length', ascending=False)['cluster'].tolist()[0])
+        f_long.write(">" + cluster + "_" + largest_name + ":" + centroid + "." + str(leng) + "\n")
         f_long.write(str(seqs[largest_name]) + "\n")
-    
     f_long.close()
+
+    ## Print info
+    Rdb = Rdb.rename(columns={'sequence':'gene', 'centroid':'centroid_gene', 'length':'scaffold_length'})
+    Rdb.to_csv(args.output + "clustering.info.tsv", sep='\t', index=False)
+
+def parse_usearch_clustering(loc):
+    '''
+    From the location of a .uc usearch file, return something like Cdb
+
+    https://www.drive5.com/usearch/manual/cmd_calc_distmx.html
+    https://www.drive5.com/usearch/manual/opt_uc.html
+    '''
+    dtypes = {0:'category', 1:'category', 2:np.int32, 8:'object'}
+    ucols = [0,1,2,8]
+    Rdb = pd.read_csv(loc, header=None, usecols=ucols,\
+            dtype=dtypes, sep='\t')
+    table = defaultdict(list)
+
+    # Find the centroids
+    sdb  = Rdb[Rdb[0] == 'S']
+    shdb = Rdb[Rdb[0].isin(['H', 'S'])]
+    for centroid, cdb in sdb.groupby(1):
+        cent = cdb[8].tolist()[0].split()[0]
+        db = shdb[shdb[1] == centroid]
+
+        #assert len(db) == int(Rdb[2][(Rdb[0] == 'C') & (Rdb[1] == centroid)].tolist()[0])
+
+        for seq in db[8].tolist():
+            table['cluster'].append(int(centroid))
+            table['members'].append(len(db))
+            table['sequence'].append(seq.split()[0])
+            table['centroid'].append(cent)
+
+    return pd.DataFrame(table)
 
 if __name__ == '__main__':
 
@@ -132,9 +156,9 @@ if __name__ == '__main__':
         help='Output directory')
     parser.add_argument("-s", "--score_cutoff", action="store", default="cut_ga",  \
         help='An HMM score threshold to use - cut_ga, cut_nc, or cut_tc.')
-    parser.add_argument("--nucleotide", dest='nucleotide', action='store_true', \
-        help='Choose to cluster by nucleotide sequence instead of protein sequence.')
+    parser.add_argument("--amino_acid", dest='amino_acid', action='store_true', \
+        help='Choose to cluster by amino_acid sequence instead of nucleotide sequence.')
 
-    parser.set_defaults(nucleotide=False)
+    parser.set_defaults(amino_acid=False)
     args = parser.parse_args()
     main(args)
