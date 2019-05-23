@@ -17,3 +17,5 @@
 * Parallelize prodigal
 
 * Add argument for threads (controlling hmm, vsearch, and number of prodigal run in parralel)
+
+* Should be able to handle assemblies with identical scaffold names between them
