@@ -1,9 +1,5 @@
 # TODO
 
-### Immediately necessary
-
-* Use the thresholds described in the publication
-
 ### Future upgrades
 
 * Ability to use custom HMMs
