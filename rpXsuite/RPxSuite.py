@@ -11,40 +11,42 @@ from Bio import SeqIO
 from subprocess import DEVNULL
 from collections import defaultdict
 
+import rpXsuite
+
 def main(args):
 
-    hmm_file = os.path.dirname(__file__) + '/helper_files/essential.hmm'
+    hmm_file = os.path.dirname(rpXsuite.__file__) + '/helper_files/essential.hmm'
     hmm_name= args.gene
 
     args.output = args.output.rstrip("/") + "/"
-    # if not os.path.isdir(args.output):
-    #     os.system("mkdir " + args.output)
-    # else:
-    #     print("{0} already exists- either remove or choose another output name".format(args.output))
-    #     sys.exit()
-    #
-    # ## MAIN LOOP: CALL PRODIGAL, HMMSEARCH ON EACH FILE
-    # for assembly in args.input:
-    #
-    #     ## call prodigal on contigs
-    #     print("Running prodigal on " + assembly)
-    #
-    #     ## figure out basename of prodigal files
-    #     base = args.output + os.path.basename(assembly)
-    #
-    #     cmd = ["prodigal", '-i', assembly, '-p', "meta", '-d', base + ".genes", '-a', base + ".faa"]
-    #     print(' '.join(cmd))
-    #     process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
-    #     ## call HMMscan on marker genes
-    #     print("Running HMMSearch")
-    #     if args.score_cutoff == 'cut_tc':
-    #         cmd = ["hmmsearch", '--cpu', '6', "--cut_tc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
-    #     elif args.score_cutoff == 'cut_nc':
-    #         cmd = ["hmmsearch", '--cpu', '6', "--cut_nc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
-    #     elif args.score_cutoff == 'cut_ga':
-    #         cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
-    #
-    #     process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
+    if not os.path.isdir(args.output):
+        os.system("mkdir " + args.output)
+    else:
+        print("{0} already exists- either remove or choose another output name".format(args.output))
+        sys.exit()
+
+    ## MAIN LOOP: CALL PRODIGAL, HMMSEARCH ON EACH FILE
+    for assembly in args.input:
+
+        ## call prodigal on contigs
+        print("Running prodigal on " + assembly)
+
+        ## figure out basename of prodigal files
+        base = args.output + os.path.basename(assembly)
+
+        cmd = ["prodigal", '-i', assembly, '-p', "meta", '-d', base + ".genes", '-a', base + ".faa"]
+        print(' '.join(cmd))
+        process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
+        ## call HMMscan on marker genes
+        print("Running HMMSearch")
+        if args.score_cutoff == 'cut_tc':
+            cmd = ["hmmsearch", '--cpu', '6', "--cut_tc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+        elif args.score_cutoff == 'cut_nc':
+            cmd = ["hmmsearch", '--cpu', '6', "--cut_nc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+        elif args.score_cutoff == 'cut_ga':
+            cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+
+        process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
 
     ## PART 2
     ## Make FASTA file of hits
@@ -146,12 +148,12 @@ def load_genes(describe = False):
     If describe, print a description of the genes available
     '''
     # Get the thresholds and recoverability
-    Rdb = pd.read_csv(os.path.dirname(__file__) + '/helper_files/SupplementalTable_S4.2.tsv', sep='\t')
+    Rdb = pd.read_csv(os.path.dirname(rpXsuite.__file__) + '/helper_files/SupplementalTable_S4.2.tsv', sep='\t')
     g2t = Rdb.set_index('gene')['overall_threshold'].to_dict()
 
     if describe:
         # Get the descriptions
-        Ddb = pd.read_csv(os.path.dirname(__file__) + '/helper_files/SupplementalTable_S2.2.tsv', sep='\t')
+        Ddb = pd.read_csv(os.path.dirname(rpXsuite.__file__) + '/helper_files/SupplementalTable_S2.2.tsv', sep='\t')
         g2d = Ddb.sort_values('description', ascending=False).set_index('gene')['description'].to_dict()
 
         # Add
@@ -178,7 +180,7 @@ if __name__ == '__main__':
 
     # Required positional arguments
     parser.add_argument('input', nargs="+",  help="path to directories, with an asterix. eg. *.fasta, or ./assemblies/*.fasta")
-    parser.add_argument("-g", "--gene", action="store", default="Ribosomal_S9", \
+    parser.add_argument("-g", "--gene", action="store", default="Ribosomal_L6", \
         help='Marker gene to look for. Use the argument "--describe_genes" for a list of options')
     parser.add_argument("-i", "--id", action="store", default=0, \
         help='Marker gene percent identity cutoff to use when clustering. By default use the optimal threshold for species-level clustering')

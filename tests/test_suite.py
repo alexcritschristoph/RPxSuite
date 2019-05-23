@@ -36,8 +36,8 @@ class test_RPxSuite():
         self.fastas = glob.glob(load_data_loc() + \
             '*.fasta')
 
-        # if os.path.isdir(self.test_dir):
-        #     shutil.rmtree(self.test_dir)
+        if os.path.isdir(self.test_dir):
+            shutil.rmtree(self.test_dir)
 
     def tearDown(self):
         if os.path.isdir(self.test_dir):
@@ -46,7 +46,7 @@ class test_RPxSuite():
     def run(self):
         self.setUp()
         self.test0()
-        #self.tearDown()
+        self.tearDown()
 
     def test0(self):
         '''
