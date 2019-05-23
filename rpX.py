@@ -1,3 +1,4 @@
+# This is the RPXsuite
 import os
 import sys
 import glob
