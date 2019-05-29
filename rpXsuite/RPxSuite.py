@@ -179,7 +179,7 @@ if __name__ == '__main__':
         """, formatter_class=argparse.RawTextHelpFormatter)
 
     # Required positional arguments
-    parser.add_argument('input', nargs="+",  help="path to directories, with an asterix. eg. *.fasta, or ./assemblies/*.fasta")
+    parser.add_argument('input', nargs="?",  help="path to directories, with an asterix. eg. *.fasta, or ./assemblies/*.fasta")
     parser.add_argument("-g", "--gene", action="store", default="Ribosomal_L6", \
         help='Marker gene to look for. Use the argument "--describe_genes" for a list of options')
     parser.add_argument("-i", "--id", action="store", default=0, \
