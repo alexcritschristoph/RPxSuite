@@ -76,7 +76,7 @@ def main(args):
 
     ## Cluster protein hits
     print("Running VSEARCH")
-    cmd = ["vsearch", "--cluster_fast", args.output + "all.hits", "--id", str(args.id), "--centroids", args.output + "centroids.fasta", "--uc", args.output + "clusters.txt"]
+    cmd = ["vsearch", "--cluster_fast", args.output + "all.hits", "--id", str(args.id), "--centroids", args.output + "centroids.fasta", "--maxrejects", "0", "--threads", "6", "--uc", args.output + "clusters.txt"]
     print(' '.join(cmd))
     process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
 
