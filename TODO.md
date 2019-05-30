@@ -10,9 +10,9 @@
 
 * Ability to input a list of assemblies and their filename
 
-* Better handleing of choosing the gene you want. The ability to print a description table would be ideal
+* ~~Better handleing of choosing the gene you want. The ability to print a description table would be ideal~~
 
-* Change vsearch clustering parameters
+* ~~Change vsearch clustering parameters~~
 
 * Parallelize prodigal
 
