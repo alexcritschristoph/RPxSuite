@@ -1,7 +1,7 @@
 # RPxSuite
 RPxSuite is a dedicated, stand-alone, tool for the identification and clustering of marker genes in shotgun metagenomic assemblies.
 
-The publication supporting this tool is available on [bioRxiv](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+The publication supporting this tool is available on [bioRxiv](https://www.biorxiv.org/content/10.1101/647511v1)
 
 ## Installation with pip
 ```
