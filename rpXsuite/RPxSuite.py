@@ -28,23 +28,28 @@ def main(args):
     ## MAIN LOOP: CALL PRODIGAL, HMMSEARCH ON EACH FILE
     for assembly in args.input:
 
-        ## call prodigal on contigs
-        print("Running prodigal on " + assembly)
-
         ## figure out basename of prodigal files
         base = args.output + os.path.basename(assembly)
 
-        cmd = ["prodigal", '-i', assembly, '-p', "meta", '-d', base + ".genes", '-a', base + ".faa"]
-        print(' '.join(cmd))
-        process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
+        ## call prodigal on contigs
+        if not args.prodigal:
+            print("Running prodigal on " + assembly)
+
+
+            cmd = ["prodigal", '-i', assembly, '-p', "meta", '-d', base + ".genes", '-a', base + ".faa"]
+            print(' '.join(cmd))
+            process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
+            prodigal_file_name = base + '.faa'
+        else:
+            prodigal_file_name = args.prodigal
         ## call HMMscan on marker genes
         print("Running HMMSearch")
         if args.score_cutoff == 'cut_tc':
-            cmd = ["hmmsearch", '--cpu', '6', "--cut_tc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+            cmd = ["hmmsearch", '--cpu', '6', "--cut_tc", '--tblout', base  + ".hits", hmm_file, prodigal_file_name]
         elif args.score_cutoff == 'cut_nc':
-            cmd = ["hmmsearch", '--cpu', '6', "--cut_nc", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+            cmd = ["hmmsearch", '--cpu', '6', "--cut_nc", '--tblout', base  + ".hits", hmm_file, prodigal_file_name]
         elif args.score_cutoff == 'cut_ga':
-            cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', base  + ".hits", hmm_file, base + ".faa"]
+            cmd = ["hmmsearch", '--cpu', '6', "--cut_ga", '--tblout', base  + ".hits", hmm_file, prodigal_file_name]
 
         process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
 
@@ -55,7 +60,7 @@ def main(args):
     all_hits = []
     for hit in glob.glob(args.output + "*.hits"):
         f = open(hit)
-        hmm = hit.split("/")[-1].split(".")[0]
+        hmm = hit.split("/")[-1].split(".hits")[0]
         for line in f.readlines():
                 if not line.startswith("#") and line.split()[2] == hmm_name:
                         hit = line.split()[0]
@@ -67,12 +72,19 @@ def main(args):
     else:
         suffix = "*.genes"
 
-    for fn in glob.glob(args.output + suffix):
-        for record in SeqIO.parse(fn, "fasta"):
-            if record.id in all_hits:
-                f_out.write(">" + record.id + "\n")
-                f_out.write(str(record.seq) + "\n")
+    if not args.prodigal:
+        for fn in glob.glob(args.output + suffix):
+            for record in SeqIO.parse(fn, "fasta"):
+                if record.id in all_hits:
+                    f_out.write(">" + record.id + "\n")
+                    f_out.write(str(record.seq) + "\n")
+    if args.prodigal:
+        for record in SeqIO.parse(args.prodigal, "fasta"):
+                if record.id in all_hits:
+                    f_out.write(">" + record.id + "\n")
+                    f_out.write(str(record.seq) + "\n")
     f_out.close()
+
 
     ## Cluster protein hits
     print("Running VSEARCH")
@@ -190,6 +202,8 @@ if __name__ == '__main__':
         help='An HMM score threshold to use - cut_ga, cut_nc, or cut_tc.')
     parser.add_argument("--amino_acid", dest='amino_acid', action='store_true', \
         help='Choose to cluster by amino_acid sequence instead of nucleotide sequence.')
+    parser.add_argument("-p", "--prodigal", action="store", default=None, \
+        help='A prodigal predicted proteins file (output by prodigal -a) - will skip running prodigal if provided.')
     parser.add_argument("--describe_genes", action='store_true', \
         help='Print the gene options and exit')
 
