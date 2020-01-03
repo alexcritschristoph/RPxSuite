@@ -41,7 +41,21 @@ def main(args):
             process = subprocess.Popen(cmd, stdout=DEVNULL).wait()
             prodigal_file_name = base + '.faa'
         else:
-            prodigal_file_name = args.prodigal
+            if args.amino_acid:
+                prodigal_file_name = args.prodigal
+            else:
+                ## need to translate from .FNA to .FAA for HMMSEARCH
+                print("Translating genes")
+                try:
+                    f_out = open(base + "_translated_genes.faa", "w+")
+                    for record in SeqIO.parse(args.prodigal, 'fasta'):
+                        f_out.write(">" + str(record.id) + "\n")
+                        f_out.write(str(record.seq.translate()) + "\n")
+                    f_out.close()
+                except:
+                    print("ERROR: Error in translating your prodigal genes. You probably passed a prodigal Protein file when you did not select --amino_acid")
+                    sys.exit(1)
+                prodigal_file_name = base + "_translated_genes.faa"
         ## call HMMscan on marker genes
         print("Running HMMSearch")
         if args.score_cutoff == 'cut_tc':
@@ -203,7 +217,7 @@ if __name__ == '__main__':
     parser.add_argument("--amino_acid", dest='amino_acid', action='store_true', \
         help='Choose to cluster by amino_acid sequence instead of nucleotide sequence.')
     parser.add_argument("-p", "--prodigal", action="store", default=None, \
-        help='A prodigal predicted proteins file (output by prodigal -a) - will skip running prodigal if provided.')
+        help='A prodigal predicted proteins file (output by prodigal -d or prodigal -a) - will skip running prodigal if provided. Make sure this file matches your --amino_acid parameter.')
     parser.add_argument("--describe_genes", action='store_true', \
         help='Print the gene options and exit')
 
