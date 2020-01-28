@@ -5,7 +5,7 @@ The publication supporting this tool is available on [bioRxiv](https://www.biorx
 
 ## Installation with pip
 ```
-$ git clone git@github.com:alexcritschristoph/RPxSuite.git
+$ git clone https://github.com/alexcritschristoph/RPxSuite.git
 
 $ cd RPxSuite
 
