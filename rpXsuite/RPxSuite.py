@@ -214,10 +214,8 @@ if __name__ == '__main__':
         help='Output directory')
     parser.add_argument("-s", "--score_cutoff", action="store", default="cut_ga",  \
         help='An HMM score threshold to use - cut_ga, cut_nc, or cut_tc.')
-    parser.add_argument("--amino_acid", dest='amino_acid', action='store_true', \
-        help='Choose to cluster by amino_acid sequence instead of nucleotide sequence.')
     parser.add_argument("-p", "--prodigal", action="store", default=None, \
-        help='A prodigal predicted proteins file (output by prodigal -d or prodigal -a) - will skip running prodigal if provided. Make sure this file matches your --amino_acid parameter.')
+        help='A prodigal predicted proteins file (output by prodigal -d) - will skip running prodigal if provided.')
     parser.add_argument("--describe_genes", action='store_true', \
         help='Print the gene options and exit')
 
