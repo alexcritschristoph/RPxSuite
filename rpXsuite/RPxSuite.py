@@ -201,7 +201,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description= """
         finds marker genes and clusters them and such.\n
         Output: outdir_dir/clusters.txt - vsearch clustering info. outdir/centroids.txt - centroid sequences. outdir/longest.contig.fasta - longest contig sequences for each cluster.\n
-        usage: rpX.py *.fasta -g rps3
+        usage: rpX.py *.fasta -g Ribosomal_L6
         """, formatter_class=argparse.RawTextHelpFormatter)
 
     # Required positional arguments
